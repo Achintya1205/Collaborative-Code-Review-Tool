@@ -1,0 +1,19 @@
+{
+  "name": "server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Express + Socket.IO backend for the real-time code review tool",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
