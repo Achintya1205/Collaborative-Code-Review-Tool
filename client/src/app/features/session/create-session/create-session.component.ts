@@ -1,11 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { SessionService } from '../../../core/services/session.service';
 
 @Component({
   selector: 'app-create-session',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './create-session.component.html',
 })
 export class CreateSessionComponent {

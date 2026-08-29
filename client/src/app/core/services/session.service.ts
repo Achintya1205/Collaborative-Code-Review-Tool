@@ -3,11 +3,29 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+export interface DiffLine {
+  type: 'added' | 'removed' | 'context';
+  content: string;
+  oldLineNumber: number | null;
+  newLineNumber: number | null;
+}
+
+export interface DiffHunk {
+  header: string;
+  lines: DiffLine[];
+}
+
+export interface DiffFile {
+  oldPath: string;
+  newPath: string;
+  hunks: DiffHunk[];
+}
+
 export interface ReviewSession {
   _id: string;
   title: string;
   rawDiff: string;
-  parsedDiff: unknown;
+  parsedDiff: DiffFile[];
   status: string;
   reviewers: string[];
   createdAt: string;

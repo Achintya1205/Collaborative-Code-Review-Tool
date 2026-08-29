@@ -2,21 +2,22 @@
   @if (createdSession()) {
     <div class="text-center">
       <h2 class="text-xl font-semibold mb-2">Review session created</h2>
-      <p class="text-gray-600">Share this link with your reviewers:</p>
-      <code class="block my-4 p-3 bg-gray-100 rounded break-all text-sm">
-        /session/{{ createdSession()!.id }}
-      </code>
-      <p class="text-sm text-gray-500 mb-4">
-        (The review view is coming in the next commit — for now this just
-        confirms the session was saved to the database.)
-      </p>
-      <button
-        type="button"
-        (click)="startAnother()"
-        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+      <p class="text-gray-600 mb-4">Open it to view the diff and start reviewing:</p>
+      <a
+        [routerLink]="['/session', createdSession()!.id]"
+        class="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition mb-4"
       >
-        Create another
-      </button>
+        Open "{{ createdSession()!.title }}"
+      </a>
+      <div>
+        <button
+          type="button"
+          (click)="startAnother()"
+          class="text-sm text-gray-500 hover:text-gray-700 underline"
+        >
+          Create another
+        </button>
+      </div>
     </div>
   } @else {
     <h2 class="text-xl font-semibold mb-4">Start a review</h2>
