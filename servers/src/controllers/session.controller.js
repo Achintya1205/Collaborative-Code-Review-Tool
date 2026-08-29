@@ -1,4 +1,5 @@
 const ReviewSession = require('../models/ReviewSession.model');
+const { parseDiff } = require('../services/diffParser.service');
 
 async function createSession(req, res, next) {
   try {
@@ -8,9 +9,12 @@ async function createSession(req, res, next) {
       return res.status(400).json({ message: 'title and rawDiff are required' });
     }
 
+    const parsedDiff = parseDiff(rawDiff);
+
     const session = await ReviewSession.create({
       title,
       rawDiff,
+      parsedDiff,
       reviewers: reviewers || [],
     });
 

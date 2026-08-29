@@ -16,6 +16,10 @@ const reviewSessionSchema = new mongoose.Schema(
       enum: ['open', 'closed'],
       default: 'open',
     },
+    parsedDiff: {
+      type: mongoose.Schema.Types.Mixed,
+      default: [],
+    },
     reviewers: {
       type: [String],
       default: [],
