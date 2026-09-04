@@ -29,6 +29,10 @@ const commentSchema = new mongoose.Schema(
       ref: 'Comment',
       default: null,
     },
+    resolved: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

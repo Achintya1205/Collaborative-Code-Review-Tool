@@ -88,11 +88,27 @@
               @if (activeLineKey() === lineKey(file.newPath, effectiveLine)) {
                 <div class="bg-gray-50 border-t border-b border-gray-200 pl-24 pr-4 py-3">
                   @for (comment of topLevelCommentsFor(file.newPath, effectiveLine); track comment._id) {
-                    <div class="mb-3">
-                      <p class="text-sm">
-                        <span class="font-medium">{{ comment.authorName }}</span>
-                        {{ comment.content }}
-                      </p>
+                    <div class="mb-3" [class.opacity-50]="comment.resolved">
+                      <div class="flex items-start justify-between gap-2">
+                        <p class="text-sm">
+                          <span class="font-medium">{{ comment.authorName }}</span>
+                          {{ comment.content }}
+                          @if (comment.resolved) {
+                            <span class="ml-1 text-xs text-green-600 font-medium">✓ Resolved</span>
+                          }
+                        </p>
+                        <button
+                          type="button"
+                          (click)="toggleResolve(comment)"
+                          class="shrink-0 text-xs px-2 py-0.5 rounded border"
+                          [class.border-green-600]="!comment.resolved"
+                          [class.text-green-600]="!comment.resolved"
+                          [class.border-gray-300]="comment.resolved"
+                          [class.text-gray-500]="comment.resolved"
+                        >
+                          {{ comment.resolved ? 'Reopen' : 'Resolve' }}
+                        </button>
+                      </div>
                       <button
                         type="button"
                         (click)="startReply(comment._id)"

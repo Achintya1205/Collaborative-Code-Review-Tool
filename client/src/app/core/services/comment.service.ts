@@ -11,6 +11,7 @@ export interface Comment {
   authorName: string;
   content: string;
   parentComment: string | null;
+  resolved: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -37,5 +38,11 @@ export class CommentService {
 
   createComment(sessionId: string, payload: CreateCommentPayload): Observable<Comment> {
     return this.http.post<Comment>(this.baseUrl(sessionId), payload);
+  }
+
+  resolveComment(sessionId: string, commentId: string, resolved: boolean): Observable<Comment> {
+    return this.http.patch<Comment>(`${this.baseUrl(sessionId)}/${commentId}/resolve`, {
+      resolved,
+    });
   }
 }

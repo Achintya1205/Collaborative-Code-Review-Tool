@@ -26,7 +26,6 @@ export class SessionViewComponent implements OnInit, OnDestroy {
   activeLineKey = signal<string | null>(null);
   replyingToId = signal<string | null>(null);
 
-  // Plain (non-signal) fields for form inputs — bound via ngModel
   authorNameValue = '';
   newCommentTextValue = '';
   replyTextValue = '';
@@ -34,6 +33,7 @@ export class SessionViewComponent implements OnInit, OnDestroy {
   private sessionId: string | null = null;
   private onPresenceUpdate = (viewers: string[]) => this.viewers.set(viewers);
   private onCommentCreated = (comment: Comment) => this.addCommentIfNew(comment);
+  private onCommentUpdated = (comment: Comment) => this.updateComment(comment);
 
   ngOnInit(): void {
     this.sessionId = this.route.snapshot.paramMap.get('id');
@@ -46,6 +46,7 @@ export class SessionViewComponent implements OnInit, OnDestroy {
 
     this.socketService.getSocket().on('presence-update', this.onPresenceUpdate);
     this.socketService.getSocket().on('comment-created', this.onCommentCreated);
+    this.socketService.getSocket().on('comment-updated', this.onCommentUpdated);
     this.socketService.joinSession(this.sessionId);
 
     this.sessionService.getSession(this.sessionId).subscribe({
@@ -74,6 +75,7 @@ export class SessionViewComponent implements OnInit, OnDestroy {
     }
     this.socketService.getSocket().off('presence-update', this.onPresenceUpdate);
     this.socketService.getSocket().off('comment-created', this.onCommentCreated);
+    this.socketService.getSocket().off('comment-updated', this.onCommentUpdated);
   }
 
   private addCommentIfNew(comment: Comment): void {
@@ -81,6 +83,10 @@ export class SessionViewComponent implements OnInit, OnDestroy {
       return;
     }
     this.comments.set([...this.comments(), comment]);
+  }
+
+  private updateComment(comment: Comment): void {
+    this.comments.set(this.comments().map((c) => (c._id === comment._id ? comment : c)));
   }
 
   lineKey(filePath: string, lineNumber: number | null): string {
@@ -154,6 +160,16 @@ export class SessionViewComponent implements OnInit, OnDestroy {
           this.replyTextValue = '';
           this.replyingToId.set(null);
         },
+      });
+  }
+
+  toggleResolve(comment: Comment): void {
+    if (!this.sessionId) return;
+
+    this.commentService
+      .resolveComment(this.sessionId, comment._id, !comment.resolved)
+      .subscribe({
+        next: (updated) => this.updateComment(updated),
       });
   }
 }

@@ -47,4 +47,31 @@ async function getComments(req, res, next) {
   }
 }
 
-module.exports = { createComment, getComments };
+async function resolveComment(req, res, next) {
+  try {
+    const { sessionId, commentId } = req.params;
+    const { resolved } = req.body;
+
+    if (typeof resolved !== 'boolean') {
+      return res.status(400).json({ message: 'resolved must be a boolean' });
+    }
+
+    const comment = await Comment.findOneAndUpdate(
+      { _id: commentId, session: sessionId },
+      { resolved },
+      { new: true }
+    );
+
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    getIO().to(sessionId).emit('comment-updated', comment);
+
+    res.status(200).json(comment);
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { createComment, getComments, resolveComment };
