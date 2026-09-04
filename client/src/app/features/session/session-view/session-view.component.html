@@ -5,10 +5,28 @@
     <p class="text-red-600">{{ errorMessage() }}</p>
   } @else if (session()) {
     <h1 class="text-2xl font-semibold mb-1">{{ session()!.title }}</h1>
-    <p class="text-sm text-gray-500 mb-6">
+    <p class="text-sm text-gray-500 mb-2">
       Status: {{ session()!.status }} · {{ session()!.parsedDiff.length }}
       file(s) changed
     </p>
+
+    @if (viewers().length > 0) {
+      <div class="flex items-center gap-2 mb-4 text-sm text-gray-600">
+        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+        Currently viewing: {{ viewers().join(', ') }}
+      </div>
+    }
+
+    <div class="mb-6 max-w-xs">
+      <label class="text-sm font-medium text-gray-700 block mb-1">
+        Your name (shown on comments)
+      </label>
+      <input
+        [(ngModel)]="authorNameValue"
+        placeholder="e.g. Priya"
+        class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
 
     @for (file of session()!.parsedDiff; track file.newPath) {
       <div class="mb-6 border border-gray-200 rounded overflow-hidden">
@@ -26,32 +44,105 @@
           </div>
 
           @for (line of hunk.lines; track $index) {
-            <div
-              class="flex font-mono text-sm"
-              [class.bg-green-50]="line.type === 'added'"
-              [class.bg-red-50]="line.type === 'removed'"
-            >
-              <span class="w-10 shrink-0 text-right pr-2 text-gray-400 select-none">
-                {{ line.oldLineNumber ?? '' }}
-              </span>
-              <span class="w-10 shrink-0 text-right pr-2 text-gray-400 select-none">
-                {{ line.newLineNumber ?? '' }}
-              </span>
-              <span
-                class="flex-1 whitespace-pre px-2"
-                [class.text-green-800]="line.type === 'added'"
-                [class.text-red-800]="line.type === 'removed'"
-                [class.text-gray-700]="line.type === 'context'"
+            @let effectiveLine = line.newLineNumber ?? line.oldLineNumber;
+
+            <div class="group">
+              <div
+                class="flex font-mono text-sm items-center"
+                [class.bg-green-50]="line.type === 'added'"
+                [class.bg-red-50]="line.type === 'removed'"
               >
-                @if (line.type === 'added') {
-                  +
-                } @else if (line.type === 'removed') {
-                  -
-                } @else {
-                  &nbsp;
-                }
-                {{ line.content }}
-              </span>
+                <span class="w-10 shrink-0 text-right pr-2 text-gray-400 select-none">
+                  {{ line.oldLineNumber ?? '' }}
+                </span>
+                <span class="w-10 shrink-0 text-right pr-2 text-gray-400 select-none">
+                  {{ line.newLineNumber ?? '' }}
+                </span>
+                <span
+                  class="flex-1 whitespace-pre px-2"
+                  [class.text-green-800]="line.type === 'added'"
+                  [class.text-red-800]="line.type === 'removed'"
+                  [class.text-gray-700]="line.type === 'context'"
+                >
+                  @if (line.type === 'added') {
+                    +
+                  } @else if (line.type === 'removed') {
+                    -
+                  } @else {
+                    &nbsp;
+                  }
+                  {{ line.content }}
+                </span>
+                <button
+                  type="button"
+                  (click)="toggleLine(file.newPath, effectiveLine)"
+                  class="mr-2 text-xs px-2 py-0.5 rounded border border-gray-300 text-gray-500 opacity-0 group-hover:opacity-100 hover:bg-gray-100 transition"
+                >
+                  💬
+                  @if (commentCountFor(file.newPath, effectiveLine) > 0) {
+                    {{ commentCountFor(file.newPath, effectiveLine) }}
+                  }
+                </button>
+              </div>
+
+              @if (activeLineKey() === lineKey(file.newPath, effectiveLine)) {
+                <div class="bg-gray-50 border-t border-b border-gray-200 pl-24 pr-4 py-3">
+                  @for (comment of topLevelCommentsFor(file.newPath, effectiveLine); track comment._id) {
+                    <div class="mb-3">
+                      <p class="text-sm">
+                        <span class="font-medium">{{ comment.authorName }}</span>
+                        {{ comment.content }}
+                      </p>
+                      <button
+                        type="button"
+                        (click)="startReply(comment._id)"
+                        class="text-xs text-blue-600 hover:underline"
+                      >
+                        Reply
+                      </button>
+
+                      @for (reply of repliesFor(comment._id); track reply._id) {
+                        <div class="ml-5 mt-1 text-sm">
+                          <span class="font-medium">{{ reply.authorName }}</span>
+                          {{ reply.content }}
+                        </div>
+                      }
+
+                      @if (replyingToId() === comment._id) {
+                        <div class="ml-5 mt-1 flex gap-2">
+                          <input
+                            [(ngModel)]="replyTextValue"
+                            placeholder="Write a reply…"
+                            class="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                          />
+                          <button
+                            type="button"
+                            (click)="submitReply(file.newPath, effectiveLine, comment._id)"
+                            class="text-sm text-blue-600 hover:underline"
+                          >
+                            Send
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  <div class="flex gap-2 mt-2">
+                    <input
+                      [(ngModel)]="newCommentTextValue"
+                      placeholder="Add a comment…"
+                      class="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                    />
+                    <button
+                      type="button"
+                      (click)="submitNewComment(file.newPath, effectiveLine)"
+                      class="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition"
+                    >
+                      Comment
+                    </button>
+                  </div>
+                </div>
+              }
             </div>
           }
         }
