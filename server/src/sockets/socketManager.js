@@ -1,4 +1,5 @@
 const { Server } = require('socket.io');
+const { setIO } = require('./io');
 const { addViewer, removeViewer, getViewers } = require('../services/presence.service');
 
 function generateGuestName() {
@@ -11,6 +12,8 @@ function initSocket(httpServer) {
       origin: 'http://localhost:4200',
     },
   });
+
+  setIO(io);
 
   io.on('connection', (socket) => {
     console.log(`Socket connected: ${socket.id}`);

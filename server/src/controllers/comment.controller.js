@@ -1,5 +1,6 @@
 const Comment = require('../models/Comment.model');
 const ReviewSession = require('../models/ReviewSession.model');
+const { getIO } = require('../sockets/io');
 
 async function createComment(req, res, next) {
   try {
@@ -25,6 +26,8 @@ async function createComment(req, res, next) {
       content,
       parentComment: parentComment || null,
     });
+
+    getIO().to(sessionId).emit('comment-created', comment);
 
     res.status(201).json(comment);
   } catch (err) {

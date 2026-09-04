@@ -33,6 +33,7 @@ export class SessionViewComponent implements OnInit, OnDestroy {
 
   private sessionId: string | null = null;
   private onPresenceUpdate = (viewers: string[]) => this.viewers.set(viewers);
+  private onCommentCreated = (comment: Comment) => this.addCommentIfNew(comment);
 
   ngOnInit(): void {
     this.sessionId = this.route.snapshot.paramMap.get('id');
@@ -44,6 +45,7 @@ export class SessionViewComponent implements OnInit, OnDestroy {
     }
 
     this.socketService.getSocket().on('presence-update', this.onPresenceUpdate);
+    this.socketService.getSocket().on('comment-created', this.onCommentCreated);
     this.socketService.joinSession(this.sessionId);
 
     this.sessionService.getSession(this.sessionId).subscribe({
@@ -71,6 +73,14 @@ export class SessionViewComponent implements OnInit, OnDestroy {
       this.socketService.leaveSession(this.sessionId);
     }
     this.socketService.getSocket().off('presence-update', this.onPresenceUpdate);
+    this.socketService.getSocket().off('comment-created', this.onCommentCreated);
+  }
+
+  private addCommentIfNew(comment: Comment): void {
+    if (this.comments().some((c) => c._id === comment._id)) {
+      return;
+    }
+    this.comments.set([...this.comments(), comment]);
   }
 
   lineKey(filePath: string, lineNumber: number | null): string {
@@ -115,7 +125,7 @@ export class SessionViewComponent implements OnInit, OnDestroy {
       })
       .subscribe({
         next: (comment) => {
-          this.comments.set([...this.comments(), comment]);
+          this.addCommentIfNew(comment);
           this.newCommentTextValue = '';
         },
       });
@@ -140,7 +150,7 @@ export class SessionViewComponent implements OnInit, OnDestroy {
       })
       .subscribe({
         next: (comment) => {
-          this.comments.set([...this.comments(), comment]);
+          this.addCommentIfNew(comment);
           this.replyTextValue = '';
           this.replyingToId.set(null);
         },
